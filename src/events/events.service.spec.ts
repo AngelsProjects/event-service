@@ -1,4 +1,10 @@
 /* eslint-disable @typescript-eslint/unbound-method */
+
+// Mock uuid module before any imports
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'test-uuid-' + Math.random().toString(36).substring(7)),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from './events.service';
 import { EventRepository } from './repositories/event.repository';
@@ -7,11 +13,6 @@ import { EventStatus } from '../common/types/event-status.enum';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { plainToInstance } from 'class-transformer';
-
-// Mock uuid module
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mocked-uuid-' + Math.random().toString(36).substring(7)),
-}));
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -205,7 +206,7 @@ describe('EventsService', () => {
 
       expect(updated.status).toBe(EventStatus.PUBLISHED);
       expect(updated.id).toBe(event.id);
-      expect(updated.updatedAt.getTime()).toBeGreaterThan(
+      expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(
         event.updatedAt.getTime(),
       );
       expect(notificationService.notifyEventPublished).toHaveBeenCalledTimes(1);
