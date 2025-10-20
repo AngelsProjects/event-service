@@ -46,7 +46,6 @@ export class EventsController {
     description: 'Unauthorized - Admin token required',
   })
   async create(@Body() createEventDto: CreateEventDto) {
-    console.log('body:', createEventDto);
     const event = await this.eventsService.create(createEventDto);
     return event.toAdminResponse();
   }

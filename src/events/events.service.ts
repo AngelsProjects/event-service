@@ -50,7 +50,6 @@ export class EventsService {
 
   async update(id: string, updateEventDto: UpdateEventDto): Promise<Event> {
     const event = this.eventRepository.findById(id);
-    console.log('event:', event);
 
     if (!event) {
       throw new NotFoundException({

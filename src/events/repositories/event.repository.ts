@@ -13,7 +13,6 @@ export class EventRepository {
   }
 
   findById(id: string): Event | null {
-    console.log('this.events.keys():', this.events.keys());
     return this.events.get(id) || null;
   }
 
