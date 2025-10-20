@@ -16,7 +16,6 @@ export class SummaryService {
 
   constructor(private readonly eventsService: EventsService) {}
 
-  // New method to check cache status without generating summary
   getCacheStatus(eventId: string): { cacheHit: boolean } {
     const event = this.eventsService.findById(eventId);
 
@@ -90,7 +89,7 @@ export class SummaryService {
   }
 
   private generateHash(event: Event): string {
-    const data = `${event.title}|${event.location}|${event.startAt.toISOString()}|${event.endAt.toISOString()}`;
+    const data = `${event.title}|${event.location || ''}|${event.startAt.toISOString()}|${event.endAt.toISOString()}`;
     return createHash('sha256').update(data).digest('hex');
   }
 
@@ -112,25 +111,28 @@ export class SummaryService {
       (event.endAt.getTime() - event.startAt.getTime()) / (1000 * 60 * 60),
     );
 
+    const location = event.location || 'our venue';
+
     const summaries = [
-      `Join us for "${event.title}" happening on ${date} at ${time} in ${event.location}. ` +
+      `Join us for "${event.title}" happening on ${date} at ${time} in ${location}. ` +
         `This exciting ${duration}-hour event promises an unforgettable experience. ` +
         `Don't miss out on this incredible opportunity to be part of something special. ` +
         `Reserve your spot today and be part of the action!`,
 
-      `Experience "${event.title}" - an extraordinary event taking place on ${date} at ${event.location}. ` +
+      `Experience "${event.title}" - an extraordinary event taking place on ${date} at ${location}. ` +
         `Starting at ${time}, this ${duration}-hour gathering will bring together amazing people and experiences. ` +
         `Mark your calendar and join us for what promises to be an outstanding occasion. ` +
         `Limited availability - secure your place now!`,
 
-      `Discover "${event.title}" on ${date} at ${time}. Located at ${event.location}, ` +
+      `Discover "${event.title}" on ${date} at ${time}. Located at ${location}, ` +
         `this ${duration}-hour event offers a unique opportunity to engage and connect. ` +
         `Whether you're a first-timer or a regular attendee, there's something special waiting for you. ` +
         `Don't wait - get your tickets before they're gone!`,
     ];
 
-    // Deterministic selection based on event ID
-    const index = parseInt(event.id.slice(0, 8), 16) % summaries.length;
+    // Deterministic selection based on event title hash
+    const titleHash = createHash('md5').update(event.title).digest('hex');
+    const index = parseInt(titleHash.slice(0, 8), 16) % summaries.length;
     return summaries[index];
   }
 
