@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import {
   Injectable,
   BadRequestException,
@@ -29,8 +30,8 @@ export class EventsService {
       createEventDto.getEndAtDate(),
     );
     this.validateStartDateInFuture(createEventDto.getStartAtDate());
-    const { v4: uuidv4 } = await import('uuid');
-    const eventId = uuidv4();
+
+    const eventId = v4();
 
     const event = new Event({
       id: eventId,

@@ -1,10 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 
-// Mock uuid module before any imports
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-' + Math.random().toString(36).substring(7)),
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from './events.service';
 import { EventRepository } from './repositories/event.repository';
