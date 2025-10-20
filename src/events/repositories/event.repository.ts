@@ -23,44 +23,46 @@ export class EventRepository {
 
   findAll(
     query: QueryEventsDto,
-    includeAllStatuses = true,
-  ): {
-    events: Event[];
-    total: number;
-  } {
+    includeAll: boolean = false,
+  ): { events: Event[]; total: number } {
     let filtered = Array.from(this.events.values());
 
-    // Filter by status
-    if (!includeAllStatuses) {
-      filtered = filtered.filter((event) =>
-        [EventStatus.PUBLISHED, EventStatus.CANCELLED].includes(event.status),
+    // Filter by status - only show PUBLISHED and CANCELLED in public view
+    if (!includeAll) {
+      filtered = filtered.filter(
+        (event) =>
+          event.status === EventStatus.PUBLISHED ||
+          event.status === EventStatus.CANCELLED,
       );
-    } else if (query.status) {
-      const statusArray = query.getStatusArray();
-      filtered = filtered.filter((event) => statusArray.includes(event.status));
+    }
+
+    // Filter by status if provided
+    if (query.status && query.status.length > 0) {
+      filtered = filtered.filter((event) =>
+        query.status.includes(event.status),
+      );
+    }
+
+    // Filter by location (case-insensitive partial match)
+    if (query.locations && query.locations.length > 0) {
+      filtered = filtered.filter((event) =>
+        query.locations.some((loc) =>
+          event.location?.toLowerCase().includes(loc.toLowerCase()),
+        ),
+      );
     }
 
     // Filter by date range
     if (query.dateFrom) {
-      const dateFrom = new Date(query.dateFrom);
-      dateFrom.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((event) => event.startAt >= dateFrom);
+      const fromDate = new Date(query.dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((event) => event.startAt >= fromDate);
     }
 
     if (query.dateTo) {
-      const dateTo = new Date(query.dateTo);
-      dateTo.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((event) => event.startAt <= dateTo);
-    }
-
-    // Filter by locations
-    if (query.locations) {
-      const locationsArray = query.getLocationsArray();
-      filtered = filtered.filter((event) =>
-        locationsArray.some((loc) =>
-          event.location.toLowerCase().includes(loc),
-        ),
-      );
+      const toDate = new Date(query.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((event) => event.startAt <= toDate);
     }
 
     const total = filtered.length;
@@ -68,7 +70,7 @@ export class EventRepository {
     // Sort by startAt
     filtered.sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
 
-    // Paginate
+    // Pagination
     const start = (query.page - 1) * query.limit;
     const end = start + query.limit;
     const events = filtered.slice(start, end);

@@ -172,7 +172,23 @@ describe('Event Service E2E Tests', () => {
         createdBy: 'cto@example.com',
       });
 
-      // Verify in public endpoint
+      // Verify in public endpoint - without location filter first
+      const publicResponseAll = await request(getHttpServer())
+        .get('/public/events')
+        .expect(HttpStatus.OK);
+
+      const publicBodyAll =
+        publicResponseAll.body as PaginatedPublicEventResponse;
+      expect(publicBodyAll.events).toHaveLength(1);
+      expect(publicBodyAll.events[0]).toMatchObject({
+        id: eventId,
+        title: 'Go Live',
+        location: 'São Paulo',
+        status: EventStatus.PUBLISHED,
+        isUpcoming: true,
+      });
+
+      // Now verify with location filter
       const publicResponse = await request(getHttpServer())
         .get('/public/events?locations=Paulo')
         .expect(HttpStatus.OK);
